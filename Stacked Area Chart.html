@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crime Trends by District</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .chart-title {
+            text-align: center;
+            width: 100%;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px; /* Space between title and charts */
+        }
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* Ensures charts are properly aligned */
+            gap: 20px; /* Adds space between charts */
+            max-width: 1200px; /* Restricts width for better layout */
+        }
+        .chart {
+            width: 400px;
+            height: 300px;
+            margin: 10px;
+        }
+        .axis text {
+            font-size: 12px;
+        }
+        .area {
+            opacity: 0.7;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h2 class="chart-title">Stacked Area Chart: Crime Trends by District</h2>
+
+    <div class="chart-container"></div>
+
+    <div class="tooltip"></div> <!-- Tooltip -->
+
+    <script>
+        // Load JSON data
+        d3.json("crime_stacked_data.json").then(function(data) {
+            console.log("✅ Loaded Data:", data);
+
+            // Extract unique crime types
+            const crimeTypes = Array.from(new Set(data.map(d => d["Primary Type"])));
+
+            // Define color scale for crime types
+            const color = d3.scaleOrdinal(d3.schemeCategory10).domain(crimeTypes);
+
+            // Tooltip
+            const tooltip = d3.select(".tooltip");
+
+            // Group data by District
+            const districts = Array.from(new Set(data.map(d => d.District)));
+
+            // Define chart dimensions
+            const width = 400, height = 250, margin = { top: 30, right: 40, bottom: 50, left: 50 };
+
+            // Create a chart for each district
+            districts.forEach(district => {
+                const districtData = data.filter(d => d.District === district);
+
+                // Group data properly by Year
+                const groupedData = d3.group(districtData, d => +d.Year);
+
+                // Prepare data for stacking
+                const stack = d3.stack()
+                    .keys(crimeTypes)
+                    .value((d, key) => d[key] || 0);
+
+                const series = stack(Array.from(groupedData, ([year, values]) => {
+                    let row = { Year: year };
+                    values.forEach(d => row[d["Primary Type"]] = d.Count || 0);
+                    return row;
+                }));
+
+                // Set scales
+                const x = d3.scaleLinear()
+                    .domain(d3.extent(districtData, d => +d.Year))
+                    .range([margin.left, width - margin.right]);
+
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(series, s => d3.max(s, d => d[1]))])
+                    .nice()
+                    .range([height - margin.bottom, margin.top]);
+
+                const area = d3.area()
+                    .x(d => x(d.data.Year))
+                    .y0(d => y(d[0]))
+                    .y1(d => y(d[1]));
+
+                // Create SVG for each district
+                const svg = d3.select(".chart-container")
+                    .append("svg")
+                    .attr("class", "chart")
+                    .attr("width", width)
+                    .attr("height", height);
+
+                // Add stacked areas
+                svg.selectAll("path")
+                    .data(series)
+                    .enter().append("path")
+                    .attr("class", "area")
+                    .attr("fill", d => color(d.key))
+                    .attr("d", area)
+                    .on("mouseover", function(event, d) {
+                        // Find the closest data point
+                        const mouseX = x.invert(d3.pointer(event, this)[0]);
+                        const year = Math.round(mouseX); // Get the closest year
+
+                        // Find the crime count for this year
+                        const dataForYear = d.find(entry => entry.data.Year === year);
+                        const count = dataForYear ? dataForYear[1] - dataForYear[0] : 0;
+
+                        tooltip.style("display", "block")
+                            .html(`
+                                <strong>Crime Type:</strong> ${d.key} <br>
+                                <strong>Year:</strong> ${year} <br>
+                                <strong>Count:</strong> ${count}
+                            `);
+                    })
+                    .on("mousemove", function(event) {
+                        tooltip.style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 20) + "px");
+                    })
+                    .on("mouseout", function() {
+                        tooltip.style("display", "none");
+                    });
+
+                // Add X-axis
+                svg.append("g")
+                    .attr("transform", `translate(0,${height - margin.bottom})`)
+                    .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format("d")));
+
+                // Add Y-axis
+                svg.append("g")
+                    .attr("transform", `translate(${margin.left},0)`)
+                    .call(d3.axisLeft(y));
+
+                // Add X-axis label
+                svg.append("text")
+                    .attr("x", width / 2)
+                    .attr("y", height - 10)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "12px")
+                    .text("Year");
+
+                // Add Y-axis label
+                svg.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("x", -height / 2)
+                    .attr("y", 9)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "12px")
+                    .text("Crime Count");
+
+
+                // Add district title
+                svg.append("text")
+                    .attr("x", width / 2)
+                    .attr("y", margin.top / 2)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "14px")
+                    .attr("font-weight", "bold")
+                    .text("District " + district);
+            });
+        });
+    </script>
+
+</body>
+</html>
