@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crime Data Dashboards</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .row-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .chart-container {
+            flex: 1;
+            min-width: 400px;
+            max-width: 800px;
+        }
+        svg {
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Crime Data Dashboards</h1>
+
+    <div class="dashboard-container">
+        <div class="row-container">
+            <div class="chart-container">
+                <h2>Crime Trends Over Time</h2>
+                <div id="crime-trends"></div>
+            </div>
+
+            <div class="chart-container">
+                <h2>Crime Distribution by Type</h2>
+                <div id="crime-types"></div>
+            </div>
+    
+        </div>
+    
+        <div class="row-container">
+            <div class="chart-container">
+                <h2>Crime Rate by Primary Type</h2>
+                <div id="crime-rate"></div>
+            </div>
+    
+            <div class="chart-container">
+                <h2>Arrest Rate by District</h2>
+                <div id="arrest-rate"></div>
+            </div>
+        </div>
+
+    </div>
+    
+
+    <script>
+        const width = 800, height = 500;
+
+        // Load data
+        async function loadData() {
+            const data = await d3.csv("updated_crime_data_2015_2025.csv");
+            return data;
+        }
+
+        // Crime Trends Over Time
+        async function crimeTrends() {
+            const data = await loadData();
+            
+            data.forEach(d => d.Year = +d.Year);
+            const validData = data.filter(d => d.Year >= 2015 && d.Year <= 2025);
+            const yearlyCounts = d3.rollup(validData, v => v.length, d => d.Year);
+            const counts = Array.from(yearlyCounts, ([year, count]) => ({ year, count })).sort((a, b) => a.year - b.year);
+
+            const svg = d3.select("#crime-trends").append("svg").attr("width", width).attr("height", height);
+            const x = d3.scaleLinear().domain([2015, 2025]).range([50, width - 50]);
+            const y = d3.scaleLinear().domain([0, d3.max(counts, d => d.count)]).range([height - 50, 50]);
+
+            svg.append("g").attr("transform", `translate(0,${height - 50})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
+            svg.append("g").attr("transform", "translate(50,0)").call(d3.axisLeft(y));
+
+            const line = d3.line().x(d => x(d.year)).y(d => y(d.count)).curve(d3.curveMonotoneX);
+            svg.append("path").datum(counts).attr("fill", "none").attr("stroke", "blue").attr("stroke-width", 2).attr("d", line);
+
+            svg.selectAll("circle").data(counts).enter().append("circle")
+                .attr("cx", d => x(d.year))
+                .attr("cy", d => y(d.count))
+                .attr("r", 4).attr("fill", "red");
+        }
+
+        // Crime Distribution by Type
+        async function crimeTypes() {
+            const data = await loadData();
+            
+            const typeCounts = d3.rollup(data, v => v.length, d => d["Primary Type"]);
+            const sortedTypes = Array.from(typeCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            
+            const svg = d3.select("#crime-types").append("svg").attr("width", width).attr("height", height);
+            const x = d3.scaleBand().domain(sortedTypes.map(d => d[0])).range([50, width - 50]).padding(0.2);
+            const y = d3.scaleLinear().domain([0, d3.max(sortedTypes, d => d[1])]).range([height - 50, 50]);
+            
+            svg.append("g").attr("transform", `translate(0,${height - 50})`).call(d3.axisBottom(x)).selectAll("text").attr("transform", "rotate(-45)").style("text-anchor", "end");
+            svg.append("g").attr("transform", "translate(50,0)").call(d3.axisLeft(y));
+            
+            svg.selectAll("rect").data(sortedTypes).enter().append("rect")
+                .attr("x", d => x(d[0])).attr("y", d => y(d[1])).attr("width", x.bandwidth()).attr("height", d => height - 50 - y(d[1]))
+                .attr("fill", "steelblue");
+        }
+
+        // Arrest Rate by District (Bar Chart)
+        async function arrestRateByDistrict() {
+            const data = await loadData();
+            
+            data.forEach(d => { d.District = +d.District; d.Arrest = d.Arrest === "True"; });
+            const districtCounts = d3.rollup(data, v => v.length, d => d.District);
+            const arrestCounts = d3.rollup(data.filter(d => d.Arrest), v => v.length, d => d.District);
+            const districtRates = Array.from(districtCounts, ([district, total]) => ({ district, rate: (arrestCounts.get(district) || 0) / total * 100 })).sort((a, b) => b.rate - a.rate);
+            
+            const svg = d3.select("#arrest-rate").append("svg").attr("width", width).attr("height", height);
+            const x = d3.scaleBand().domain(districtRates.map(d => d.district)).range([50, width - 50]).padding(0.2);
+            const y = d3.scaleLinear().domain([0, 100]).range([height - 50, 50]);
+            
+            svg.append("g").attr("transform", `translate(0,${height - 50})`).call(d3.axisBottom(x));
+            svg.append("g").attr("transform", "translate(50,0)").call(d3.axisLeft(y).tickFormat(d => d + "%"));
+            
+            svg.selectAll("rect").data(districtRates).enter().append("rect").attr("x", d => x(d.district)).attr("y", d => y(d.rate)).attr("width", x.bandwidth()).attr("height", d => height - 50 - y(d.rate)).attr("fill", "green");
+        }
+
+        // Crime Rate by Primary Type and District (Stacked Area Chart with Filtering)
+        async function crimeRateByPrimaryType() {
+            const data = await loadData();
+            
+            data.forEach(d => { d.District = +d.District; d.Year = +d.Year; });
+            const districts = Array.from(new Set(data.map(d => d.District))).sort((a, b) => a - b);
+
+            const dropdown = d3.select("#crime-rate").insert("select", ":first-child")
+                .on("change", function () { updateChart(+this.value); });
+
+            dropdown.selectAll("option")
+                .data(districts)
+                .enter().append("option")
+                .text(d => `District ${d}`)
+                .attr("value", d => d);
+
+            const svg = d3.select("#crime-rate").append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("position", "absolute")
+                .style("background", "lightgray")
+                .style("padding", "5px")
+                .style("border-radius", "5px")
+                .style("visibility", "hidden");
+
+            function updateChart(selectedDistrict) {
+                const filteredData = data.filter(d => d.District === selectedDistrict);
+                const nestedData = d3.rollup(filteredData, v => v.length, d => d.Year, d => d["Primary Type"]);
+
+                const years = Array.from(new Set(filteredData.map(d => d.Year))).sort();
+                const crimeTypes = Array.from(new Set(filteredData.map(d => d["Primary Type"]))).sort();
+
+                const stackedData = years.map(year => {
+                    const entry = { year };
+                    crimeTypes.forEach(type => entry[type] = nestedData.get(year)?.get(type) || 0);
+                    return entry;
+                });
+
+                const stack = d3.stack().keys(crimeTypes);
+                const series = stack(stackedData);
+
+                const x = d3.scaleLinear().domain(d3.extent(years)).range([50, width - 50]);
+                const y = d3.scaleLinear().domain([0, d3.max(series, s => d3.max(s, d => d[1]))]).range([height - 50, 50]);
+                const color = d3.scaleOrdinal(d3.schemeCategory10).domain(crimeTypes);
+
+                svg.selectAll("*").remove();
+                svg.append("g").attr("transform", `translate(0,${height - 50})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
+                svg.append("g").attr("transform", "translate(50,0)").call(d3.axisLeft(y));
+
+                svg.selectAll(".layer")
+                    .data(series)
+                    .enter().append("path")
+                    .attr("class", "layer")
+                    .attr("fill", d => color(d.key))
+                    .attr("opacity", 0.8)
+                    .attr("d", d3.area()
+                        .x(d => x(d.data.year))
+                        .y0(d => y(d[0]))
+                        .y1(d => y(d[1]))
+                    )
+                    .on("mouseover", function (event, d) {
+                        d3.select(this).attr("opacity", 1);
+                        tooltip.style("visibility", "visible");
+                    })
+                    .on("mousemove", function (event, d) {
+                        const [mouseX] = d3.pointer(event, this);
+                        const year = Math.round(x.invert(mouseX));  // Find closest year
+                        
+                        // Find the data point corresponding to this year
+                        const closestPoint = d.find(point => point.data.year === year);
+                        
+                        if (closestPoint) {
+                            const crimeCount = closestPoint[1] - closestPoint[0];  // Correctly compute crime rate
+                            tooltip.html(`Year: ${year}<br>Crime Type: ${d.key}<br>Crime Rate: ${crimeCount}`)
+                                .style("top", `${event.pageY - 10}px`)
+                                .style("left", `${event.pageX + 10}px`);
+                        } else {
+                            tooltip.html(`Year: ${year}<br>Crime Type: ${d.key}<br>Crime Rate: 1`);
+                        }
+                    })
+
+                    .on("mouseout", function () {
+                        d3.select(this).attr("opacity", 0.8);
+                        tooltip.style("visibility", "hidden");
+                    });
+            }
+
+            updateChart(districts[1]);
+        }
+
+        crimeTrends();
+        crimeTypes();
+        arrestRateByDistrict();
+        crimeRateByPrimaryType();
+
+
+    </script>
+
+</body>
+</html>
