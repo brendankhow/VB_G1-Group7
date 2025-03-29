@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crime Data Dashboards</title>
+  
+  <!-- External Styles and Libraries -->
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+  <script> d3.sankey = d3.sankey || d3["sankey"];</script>
+</head>
+
+<body>
+  <h1>Crime Data Dashboards</h1>
+
+  <nav>
+    <button class="tab-button active" onclick="showDashboard('overview')">📊 Overview</button>
+    <button class="tab-button" onclick="showDashboard('location')">📍 Location</button>
+    <button class="tab-button" onclick="showDashboard('domestic')">🔒 Domestic</button>
+  </nav>
+
+  <!-- Overview Dashboard -->
+  <div id="dashboard-overview" class="dashboard-container active">
+    <h2 class="dashboard-title">Crime Trends Over the Years</h2>
+    <div class="row-container">
+      <div class="chart-container">
+        <h2>Top 10 Crime Types</h2>
+        <div id="crime-types"></div>
+      </div>
+      <div class="chart-container">
+        <h2>Total Crime Trends Yearly</h2>
+        <div id="monthly-facets"></div>
+      </div>
+    </div>
+
+    <div class="row-container">
+      <div class="chart-container">
+        <h2>Frequency of Crimes Throughout the Day</h2>
+        <div id="hourly-frequency"></div>
+      </div>
+      <div class="chart-container">
+        <h2>Monthly Crime Counts</h2>
+        <div id="monthly-heatmap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location Dashboard -->
+  <div id="dashboard-location" class="dashboard-container">
+    <h2 class="dashboard-title">District Trend in Chicago</h2>
+    <div class="row-container">
+      <div class="chart-container">
+        <h2>Crime Type by District</h2>
+        <div id="crime-type-by-district"></div>
+      </div>
+      <div class="chart-container">
+        <h2>Arrest Rate Per Primary Type</h2>
+        <div id="arrest-rate-pri-type-radial"></div>
+      </div>
+    </div>
+
+    <div class="row-container">
+      <div class="chart-container">
+        <h2>District Symbol Map (Domestic Cases Only)</h2>
+        <div id="domestic-symbol-map"></div>
+      </div>
+      <div class="chart-container">
+        <h2>Arrest Rate by District</h2>
+        <div id="arrest-rate"></div>
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- Domestic Dashboard -->
+  <div id="dashboard-domestic" class="dashboard-container">
+    <div class="row-container">
+      <div class="chart-container">
+        <h2>Crime Flow by Type, Domestic, Arrest</h2>
+        <svg id="sankey-diagram" width="1100" height="700"></svg>
+      </div>
+    </div>
+    <div class="row-container">
+      <div class="chart-container">
+        <h2>Arrests VS Domestic Cases over Time</h2>
+        <div id="arrests-vs-domestic"></div>
+      </div>
+      <div class="chart-container">
+        <h2>Arrests VS Non-Domestic Cases over Time</h2>
+        <div id="arrests-vs-non-domestic"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div id="loading-spinner" style="
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    background: rgba(255,255,255,0.85);
+    padding: 20px 30px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 1000;
+  ">
+    🔄 Loading charts...
+  </div>
+
+  <!-- Main Module Script -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
