@@ -14,38 +14,48 @@
 
 <body>
   <h1>Crime Data Dashboards</h1>
-
   <nav>
     <button class="tab-button active" onclick="showDashboard('overview')">📊 Overview</button>
     <button class="tab-button" onclick="showDashboard('location')">📍 Location</button>
     <button class="tab-button" onclick="showDashboard('domestic')">🔒 Domestic</button>
   </nav>
 
-  <!-- Overview Dashboard -->
+  <!-- Overview Dashboard -->  
   <div id="dashboard-overview" class="dashboard-container active">
     <h2 class="dashboard-title">Crime Trends Over the Years</h2>
-    <div class="row-container">
-      <div class="chart-container">
-        <h2>Top 10 Crime Types</h2>
-        <div id="crime-types"></div>
-      </div>
-      <div class="chart-container">
-        <h2>Total Crime Trends Yearly</h2>
-        <div id="monthly-facets"></div>
-      </div>
-    </div>
+    <div id="year-filter-container" style="margin: 10px auto 20px auto; text-align: center;">
+      <label for="year-select"><strong>Select Year:</strong></label>
+      <select id="year-select"></select>
+    </div>    
 
-    <div class="row-container">
-      <div class="chart-container">
-        <h2>Frequency of Crimes Throughout the Day</h2>
-        <div id="hourly-frequency"></div>
-      </div>
-      <div class="chart-container">
-        <h2>Monthly Crime Counts</h2>
-        <div id="monthly-heatmap"></div>
+    <div id="monthly-facets-container">
+      <h2>Total Crime Trends Yearly</h2>
+      <div id="monthly-facets"></div>
+    </div>    
+    
+    <!-- Inside the Overview Dashboard -->
+<div class="row-container">
+  <div class="chart-container" id="hourly-frequency-container">
+    <h2>Frequency of Crimes Throughout the Day</h2>
+    <div id="hourly-frequency"></div>
+  </div>
+
+  <div class="chart-container" id="crime-types-container">
+    <!-- 🔽 Filter dropdown and title -->
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h2 id="crime-types-title">Top 10 Crime Types</h2>
+      <div>
+        <label for="crime-type-select"><strong>Show:</strong></label>
+        <select id="crime-type-select">
+          <option value="10" selected>Top 10</option>
+          <option value="5">Top 5</option>
+        </select>
       </div>
     </div>
+    <div id="crime-types"></div>
   </div>
+</div>
+</div>
 
   <!-- Location Dashboard -->
   <div id="dashboard-location" class="dashboard-container">

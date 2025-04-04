@@ -1,51 +1,69 @@
-// charts/hourlyFrequency.js
-import { loadData } from "../loadData.js";
-
-export async function drawHourlyFrequency() {
-  const data = await loadData();
-  const parseDate = d3.timeParse("%m/%d/%Y %I:%M:%S %p");
+export async function drawHourlyFrequency(data) {
+  d3.select("#hourly-frequency").html("");
 
   const hourlyCounts = d3.rollups(
     data,
     v => new Set(v.map(d => d.ID)).size,
-    d => {
-      const date = parseDate(d.Date);
-      return date ? date.getHours() : null;
-    }
-  ).filter(d => d[0] !== null).sort((a, b) => a[0] - b[0]);
+    d => d.Date.getHours()
+  )
+    .filter(d => d[0] !== null)
+    .sort((a, b) => a[0] - b[0]);
 
-  const margin = { top: 30, right: 30, bottom: 50, left: 70 };
-  const width = 800 - margin.left - margin.right;
+  const margin = { top: 30, right: 30, bottom: 70, left: 70 };
+  const width = 900 - margin.left - margin.right;
   const height = 400 - margin.top - margin.bottom;
 
   const svg = d3.select("#hourly-frequency")
     .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
+    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+    .attr("preserveAspectRatio", "xMidYMid meet")
+    .classed("responsive-svg", true);
+
+  const g = svg.append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
   const x = d3.scaleLinear().domain([0, 23]).range([0, width]);
-  const y = d3.scaleLinear().domain([0, d3.max(hourlyCounts, d => d[1])]).range([height, 0]);
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(hourlyCounts, d => d[1])])
+    .nice()
+    .range([height, 0]);
 
-  svg.append("g")
+  g.append("g")
     .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(x).ticks(24).tickFormat(d3.format("d")));
+    .call(d3.axisBottom(x).ticks(24).tickFormat(d3.format("d")))
+    .selectAll("text")
+    .attr("transform", "rotate(-45)")
+    .style("text-anchor", "end")
+    .style("font-size", "12px");
 
-  svg.append("g").call(d3.axisLeft(y));
+  g.append("g")
+    .call(d3.axisLeft(y).ticks(5))
+    .selectAll("text")
+    .style("font-size", "12px");
 
-  svg.append("path")
+  const line = d3.line()
+    .x(d => x(d[0]))
+    .y(d => y(d[1]))
+    .curve(d3.curveMonotoneX);
+
+  // Append line with animation using stroke-dasharray
+  const path = g.append("path")
     .datum(hourlyCounts)
     .attr("fill", "none")
     .attr("stroke", "orange")
     .attr("stroke-width", 2)
-    .attr("d", d3.line()
-      .x(d => x(d[0]))
-      .y(d => y(d[1]))
-      .curve(d3.curveMonotoneX)
-    );
+    .attr("d", line);
 
-  // Tooltip div
+  const totalLength = path.node().getTotalLength();
+
+  path
+    .attr("stroke-dasharray", totalLength + " " + totalLength)
+    .attr("stroke-dashoffset", totalLength)
+    .transition()
+    .duration(1000)
+    .ease(d3.easeCubic)
+    .attr("stroke-dashoffset", 0);
+
   const tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("position", "absolute")
@@ -56,36 +74,49 @@ export async function drawHourlyFrequency() {
     .style("font-size", "12px")
     .style("visibility", "hidden");
 
-  svg.selectAll("circle")
+  g.selectAll("circle")
     .data(hourlyCounts)
     .enter().append("circle")
     .attr("cx", d => x(d[0]))
     .attr("cy", d => y(d[1]))
-    .attr("r", 3)
+    .attr("r", 0)
     .attr("fill", "orange")
-    .on("mouseover", (event, d) => {
+    .on("mouseover", function (event, d) {
       tooltip.html(`<strong>Hour:</strong> ${d[0]}:00<br><strong>Crimes:</strong> ${d[1].toLocaleString()}`)
         .style("left", `${event.pageX + 10}px`)
         .style("top", `${event.pageY - 20}px`)
         .style("visibility", "visible");
-      d3.select(event.currentTarget).attr("fill", "red");
-    })
-    .on("mouseout", (event) => {
-      tooltip.style("visibility", "hidden");
-      d3.select(event.currentTarget).attr("fill", "orange");
-    });
 
-  svg.append("text")
+      d3.select(this)
+        .transition()
+        .duration(200)
+        .attr("r", 7)
+        .attr("fill", "red");
+    })
+    .on("mouseout", function () {
+      tooltip.style("visibility", "hidden");
+      d3.select(this)
+        .transition()
+        .duration(200)
+        .attr("r", 4)
+        .attr("fill", "orange");
+    })
+    .transition()
+    .duration(800)
+    .attr("r", 4);
+
+  // Labels
+  g.append("text")
     .attr("x", width / 2)
-    .attr("y", height + 40)
+    .attr("y", height + 60)
     .style("font-size", "14px")
     .attr("text-anchor", "middle")
     .text("Hour of Day");
 
-  svg.append("text")
+  g.append("text")
     .attr("transform", "rotate(-90)")
     .attr("x", -height / 2)
-    .attr("y", -45)
+    .attr("dy", "-4em")
     .style("font-size", "14px")
     .attr("text-anchor", "middle")
     .text("Number of Crimes");
