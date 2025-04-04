@@ -2,60 +2,74 @@ export function facetedMonthlyTrendChart(data) {
   const container = d3.select("#monthly-facets");
   container.html(""); // Clear previous chart
 
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  container.append("h2")
+    .text("Total Crime Trends Yearly")
+    .style("text-align", "center")
+    .style("margin-bottom", "10px");
+ // Clear previous chart
 
-  const margin = { top: 30, right: 20, bottom: 50, left: 50 };
-  const panelWidth = 150;
-  const panelHeight = 300;
+  data.forEach(d => {
+    const date = new Date(d.Date);
+    d.Month = date.getMonth();
+    d.Year = date.getFullYear();
+  });
+
+  const grouped = d3.rollups(
+    data,
+    v => v.length,
+    d => d.Month,
+    d => d.Year
+  );
+
   const months = d3.range(12);
-
-  const containerWidth = container.node().getBoundingClientRect().width;
-  const responsiveWidth = panelWidth * 12 + margin.left + margin.right;
-
-  const svg = container.append("svg")
-    .attr("viewBox", `0 0 ${responsiveWidth} ${panelHeight + margin.top + margin.bottom}`)
-    .attr("preserveAspectRatio", "xMinYMin meet")
-    .classed("responsive-svg", true);
-
-  const g = svg.append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
-
   const years = Array.from(new Set(data.map(d => d.Year))).sort();
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  const tooltip = d3.select("body").append("div")
+  const panelWidth = 80;
+  const panelHeight = 350;
+  const margin = { top: 20, right: 20, bottom: 30, left: 80 };
+  const width = panelWidth * 12;
+  const height = panelHeight;
+
+  const wrapper = container.append("div")
+    .style("display", "flex")
+    .style("justify-content", "center")
+    .style("width", "100%");
+
+  const svg = wrapper.append("svg")
+    .style("display", "block")
+    .style("margin", "0 auto")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+
+  const tooltip = d3.select("body")
+    .append("div")
     .attr("class", "tooltip")
+    .style("visibility", "hidden")
     .style("position", "absolute")
     .style("background", "white")
     .style("padding", "6px")
-    .style("border-radius", "4px")
     .style("border", "1px solid #999")
-    .style("pointer-events", "none")
-    .style("font-size", "12px")
-    .style("visibility", "hidden");
+    .style("border-radius", "4px")
+    .style("font-size", "12px");
 
   if (years.length > 1) {
-    const grouped = d3.rollups(
-      data,
-      v => v.length,
-      d => d.Month,
-      d => d.Year
-    );
-
-    const panelData = months.map(month => {
-      const yearCounts = grouped.find(d => d[0] === month)?.[1] || [];
-      const values = years.map(y => {
-        const found = yearCounts.find(x => x[0] === y);
-        return { year: y, count: found ? found[1] : 0 };
-      });
+    const monthSeries = months.map(month => {
+      const yearMap = grouped.find(d => d[0] === month)?.[1] || [];
+      const values = years.map(y => ({
+        year: y,
+        count: yearMap.find(([year]) => year === y)?.[1] || 0
+      }));
       return { month, values };
     });
 
-    const x = d3.scalePoint().domain(years).range([0, panelWidth - margin.right]);
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scalePoint().domain(years).range([0, panelWidth - 10]);
     const y = d3.scaleLinear()
-      .domain([0, d3.max(panelData, d => d3.max(d.values, v => v.count))])
+      .domain([10000, d3.max(monthSeries, d => d3.max(d.values, v => v.count))])
       .nice()
-      .range([panelHeight - margin.bottom, 0]);
+      .range([panelHeight - margin.bottom, margin.top]);
 
     const line = d3.line()
       .x(d => x(d.year))
@@ -63,136 +77,112 @@ export function facetedMonthlyTrendChart(data) {
       .curve(d3.curveMonotoneX);
 
     const monthGroup = g.selectAll(".month-panel")
-      .data(panelData)
-      .enter().append("g")
+      .data(monthSeries)
+      .enter()
+      .append("g")
       .attr("class", "month-panel")
       .attr("transform", (d, i) => `translate(${i * panelWidth},0)`);
 
-    // 🔳 Add vertical divider lines (excluding first panel)
-    g.selectAll(".panel-divider")
-      .data(months.slice(1)) // skip first
-      .enter()
-      .append("line")
-      .attr("class", "panel-divider")
-      .attr("x1", d => d * panelWidth)
-      .attr("x2", d => d * panelWidth)
-      .attr("y1", 0)
-      .attr("y2", panelHeight - margin.bottom)
-      .attr("stroke", "#999")
-      .attr("stroke-width", 1);
-
-    // Show x-axis (years) in all panels
     monthGroup.append("g")
-      .attr("transform", `translate(0,${panelHeight - margin.bottom})`)
-      .call(d3.axisBottom(x).tickFormat(d3.format("d")))
-      .selectAll("text")
-      .attr("transform", "rotate(-45)")
-      .style("text-anchor", "end")
-      .attr("font-size", "10px");
-
-    // Only first panel shows y-axis
-    monthGroup.append("g")
-      .attr("transform", `translate(0,0)`)
-      .each(function (d, i) {
+      .each(function(d, i) {
+        const axis = d3.select(this);
         if (i === 0) {
-          d3.select(this)
-            .call(d3.axisLeft(y).ticks(4))
-            .selectAll("text")
-            .attr("font-size", "10px");
+          axis.call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(",")));
+        } else {
+          axis.call(d3.axisLeft(y).ticks(5).tickFormat("").tickSize(0));
+          axis.selectAll("line").remove();
         }
+        axis.select(".domain")
+          .attr("stroke", "black")
+          .attr("stroke-width", 1);
       });
 
-    // 🔴 Red dashed mean line
-    monthGroup.append("line")
-      .attr("x1", 0)
-      .attr("x2", panelWidth - margin.right)
-      .attr("y1", d => y(d3.mean(d.values, v => v.count)))
-      .attr("y2", d => y(d3.mean(d.values, v => v.count)))
-      .attr("stroke", "#e84d4d")
-      .attr("stroke-width", 1)
-      .attr("stroke-dasharray", "3,3");
-
-    // 📈 Line path for trend
-    monthGroup.each(function (d) {
-  const g = d3.select(this);
-
-  const path = g.append("path")
-    .datum(d.values)
-    .attr("fill", "none")
-    .attr("stroke", "steelblue")
-    .attr("stroke-width", 1.5)
-    .attr("d", line);
-
-  const totalLength = path.node().getTotalLength();
-
-  path
-    .attr("stroke-dasharray", `${totalLength} ${totalLength}`)
-    .attr("stroke-dashoffset", totalLength)
-    .transition()
-    .duration(1000)
-    .ease(d3.easeCubic)
-    .attr("stroke-dashoffset", 0);
-});
-
-
-    // 🗓 Month title
     monthGroup.append("text")
-      .attr("x", panelWidth / 2 - margin.right)
-      .attr("y", -10)
+      .attr("x", (panelWidth - 10) / 2)
+      .attr("y", 10)
       .attr("text-anchor", "middle")
-      .attr("font-size", "12px")
+      .style("font-weight", "bold")
       .text(d => monthNames[d.month]);
 
-    // 🔵 Circles + hover behavior
-    monthGroup.each(function (d) {
-      const g = d3.select(this);
-      const circles = g.selectAll("circle")
-        .data(d.values, v => v.year);
+    monthGroup.append("path")
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1.5)
+      .attr("d", d => line(d.values));
 
-      circles.enter()
-        .append("circle")
-        .attr("cx", v => x(v.year))
-        .attr("cy", v => y(0))
-        .attr("r", 3)
-        .attr("fill", "steelblue")
-        .merge(circles)
-        .transition()
-        .duration(800)
-        .attr("cy", v => y(v.count));
+    monthGroup.each(function(d) {
+      const g = d3.select(this);
+      const values = d.values;
+
+      const xVals = values.map(v => years.indexOf(v.year));
+      const yVals = values.map(v => v.count);
+
+      const xMean = d3.mean(xVals);
+      const yMean = d3.mean(yVals);
+      const slope = d3.sum(xVals.map((x, i) => (x - xMean) * (yVals[i] - yMean))) /
+                    d3.sum(xVals.map(x => (x - xMean) ** 2));
+      const intercept = yMean - slope * xMean;
+
+      const trendLine = xVals.map(x => ({
+        year: years[x],
+        count: slope * x + intercept
+      }));
+
+      g.append("path")
+        .datum(trendLine)
+        .attr("fill", "none")
+        .attr("stroke", "red")
+        .attr("stroke-width", 1)
+        .attr("stroke-dasharray", "4 2")
+        .attr("d", line);
 
       g.selectAll("circle")
-        .on("mouseover", function (event, v) {
-          tooltip.html(`<strong>Year:</strong> ${v.year}<br><strong>Cases:</strong> ${v.count}`)
-            .style("top", `${event.pageY - 20}px`)
+        .data(values)
+        .enter()
+        .append("circle")
+        .attr("cx", d => x(d.year))
+        .attr("cy", d => y(d.count))
+        .attr("r", 3)
+        .attr("fill", "steelblue")
+        .on("mouseover", function(event, d) {
+          tooltip.html(`<strong>Year:</strong> ${d.year}<br><strong>Crimes:</strong> ${d.count.toLocaleString()}`)
+            .style("visibility", "visible")
             .style("left", `${event.pageX + 10}px`)
-            .style("visibility", "visible");
-          d3.select(this).transition().duration(200).attr("fill", "red").attr("r", 6);
+            .style("top", `${event.pageY - 20}px`);
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("r", 6)
+            .attr("fill", "red");
         })
-        .on("mouseout", function () {
+        .on("mouseout", function() {
           tooltip.style("visibility", "hidden");
-          d3.select(this).transition().duration(200).attr("fill", "steelblue").attr("r", 3);
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("r", 3)
+            .attr("fill", "steelblue");
         });
+        
     });
 
-    // 🏷 Global x-axis label
     svg.append("text")
-      .attr("x", responsiveWidth / 2)
-      .attr("y", panelHeight + margin.top + 40)
+      .attr("x", (width + margin.left + margin.right) / 2)
+      .attr("y", height + margin.top + 30)
       .attr("text-anchor", "middle")
       .style("font-size", "14px")
       .text("Year");
 
-    // 🏷 Global y-axis label
     svg.append("text")
-      .attr("transform", `rotate(-90)`)
-      .attr("x", -(panelHeight / 2))
+      .attr("transform", "rotate(-90)")
+      .attr("x", -(height + margin.top + margin.bottom) / 2)
       .attr("y", 15)
       .attr("text-anchor", "middle")
       .style("font-size", "14px")
-      .text("Number of Cases");
+      .text("Number of Crimes");
 
   } else {
-    // Single year
+    // Single-year fallback
     const monthData = d3.rollups(
       data,
       v => v.length,
@@ -245,18 +235,28 @@ export function facetedMonthlyTrendChart(data) {
       .enter().append("circle")
       .attr("cx", d => x(d.month))
       .attr("cy", d => y(d.count))
-      .attr("r", 0)
+      .attr("r", 3)
       .attr("fill", "steelblue")
-      .on("mouseover", function (event, d) {
+      .on("mouseover", function(event, d) {
         tooltip.html(`<strong>Month:</strong> ${monthNames[d.month]}<br><strong>Cases:</strong> ${d.count}`)
           .style("top", `${event.pageY - 20}px`)
           .style("left", `${event.pageX + 10}px`)
           .style("visibility", "visible");
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("r", 6)
+          .attr("fill", "red");
       })
-      .on("mouseout", () => tooltip.style("visibility", "hidden"))
-      .transition()
-      .duration(800)
-      .attr("r", 4);
+      .on("mouseout", function() {
+        tooltip.style("visibility", "hidden");
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("r", 4)
+          .attr("fill", "steelblue");
+      });
+      
 
     gMain.append("text")
       .attr("x", (panelWidth * 12 - margin.right) / 2)

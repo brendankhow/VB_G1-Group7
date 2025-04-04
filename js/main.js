@@ -1,6 +1,6 @@
-import { crimeTypes } from "./charts/crimeTypes.js";
-//import { monthlyCyclePlot } from "./charts/monthlyCyclePlot.js";
+import { facetedMonthlyTrendChart } from "./charts/facetedMonthlyTrendChart.js";
 import { drawHourlyFrequency } from "./charts/hourlyFrequency.js";
+import { crimeTypes } from "./charts/crimeTypes.js";
 // import { crimeTypeByDistrict } from "./charts/crimeTypeByDistrict.js";
 // import { radialBarChart } from "./charts/radialBarChart.js";
 // import { districtSymbolMap } from "./charts/districtSymbolMap.js";
@@ -9,7 +9,7 @@ import { drawHourlyFrequency } from "./charts/hourlyFrequency.js";
 // import { arrestsVsDomesticCases } from "./charts/arrestsVsDomesticCases.js";
 // import { arrestsVsNonDomesticCases } from "./charts/arrestsVsNonDomesticCases.js";
 import { loadData } from "./loadData.js"; // You already have this
-import { facetedMonthlyTrendChart } from "./charts/facetedMonthlyTrendChart.js"; // assume this is ready
+
 
 let globalData = [];
 

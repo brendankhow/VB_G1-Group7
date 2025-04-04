@@ -162,16 +162,30 @@ select {
 }
 
 /* Hourly frequency chart */
-#hourly-frequency-container {
+#monthly-facets-container {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center contents horizontally */
+  margin-bottom: 40px;
+  box-sizing: border-box;
 }
 
-#hourly-frequency {
+#monthly-facets {
+  overflow-x: auto;
+  padding-bottom: 10px;
   width: 100%;
+  display: flex;
+  justify-content: center; /* Center chart horizontally */
 }
 
-#hourly-frequency svg {
-  width: 100%;
-  height: auto;
-  overflow: visible;
+.faceted-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 20px 0 10px 0;
+  width: 100%;              /* make it span full width */
+  text-align: left;         /* align text inside to the left */
+  padding-left: 80px;       /* match chart's left margin */
+  box-sizing: border-box;
 }
+
