@@ -1,7 +1,9 @@
 export async function crimeTypes(data, limit = 10) {
   const margin = { top: 20, right: 30, bottom: 50, left: 180 };
+
   const container = document.getElementById("crime-types");
-  const containerWidth = container.clientWidth;
+  const maxWidth = 600;
+  const containerWidth = Math.min(container.clientWidth, maxWidth);
   const width = containerWidth - margin.left - margin.right;
   const height = 400 - margin.top - margin.bottom;
 
@@ -42,7 +44,7 @@ export async function crimeTypes(data, limit = 10) {
   g.append("g")
     .call(d3.axisLeft(y))
     .selectAll("text")
-    .style("font-size", "12px");
+    .style("font-size", "14px");
 
   g.append("g")
     .attr("transform", `translate(0,${height})`)
@@ -86,8 +88,9 @@ export async function crimeTypes(data, limit = 10) {
     .style("padding", "6px")
     .style("border", "1px solid #999")
     .style("border-radius", "4px")
-    .style("font-size", "12px")
-    .style("visibility", "hidden");
+    .style("font-size", "14px")
+    .style("visibility", "hidden")
+    .style("pointer-events", "none");
 
   g.selectAll("rect")
     .on("mouseover", (event, d) => {
@@ -95,17 +98,18 @@ export async function crimeTypes(data, limit = 10) {
         .style("top", `${event.pageY - 20}px`)
         .style("left", `${event.pageX + 10}px`)
         .style("visibility", "visible");
+
       d3.select(event.currentTarget)
         .transition().duration(200)
         .attr("fill", "orange");
     })
     .on("mouseout", (event) => {
       tooltip.style("visibility", "hidden");
+
       d3.select(event.currentTarget)
         .transition().duration(200)
         .attr("fill", "steelblue");
     });
 
-    console.log("🟠 crimeTypes called with limit:", limit);
-
+  console.log("🟠 crimeTypes called with limit:", limit);
 }

@@ -1,7 +1,7 @@
 import { loadRawData } from "../loadData.js";
 
 export async function drawSankey() {
-  const raw = await loadRawData();  // Load unfiltered full dataset
+  const raw = await loadRawData();
 
   const cleaned = raw
     .filter(d => d["Primary Type"] && d["Domestic"] && d["Arrest"])
@@ -61,7 +61,18 @@ export async function drawSankey() {
     .size([width, height])
     .nodeSort(null);
 
-  const tooltip = d3.select("body").append("div").attr("class", "tooltip");
+  // ✅ Styled tooltip
+  const tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("position", "absolute")
+    .style("background", "white")
+    .style("padding", "8px")
+    .style("border", "1px solid #999")
+    .style("border-radius", "4px")
+    .style("font-size", "12px")
+    .style("pointer-events", "none")
+    .style("box-shadow", "0 2px 6px rgba(0,0,0,0.2)")
+    .style("visibility", "hidden");
 
   const nodes = [], links = [];
   const nodeMap = new Map();
@@ -96,6 +107,7 @@ export async function drawSankey() {
     links: links.map(d => ({ ...d }))
   });
 
+  // Links
   svg.append("g")
     .attr("fill", "none")
     .selectAll("path")
@@ -106,16 +118,18 @@ export async function drawSankey() {
     .attr("stroke-width", d => Math.max(1, d.width))
     .attr("stroke-opacity", 0.6)
     .on("mouseover", (event, d) => {
-      tooltip.transition().duration(200).style("opacity", 0.9);
-      tooltip.html(`${d.source.name} → ${d.target.name}<br><b>Cases:</b> ${d.value}`)
-        .style("left", (event.pageX + 15) + "px")
-        .style("top", (event.pageY - 28) + "px");
+      tooltip
+        .style("visibility", "visible")
+        .html(`<strong>${d.source.name} → ${d.target.name}</strong><br><b>Cases:</b> ${d.value}`)
+        .style("left", `${event.pageX + 15}px`)
+        .style("top", `${event.pageY - 28}px`);
     })
     .on("mousemove", event => tooltip
-      .style("left", (event.pageX + 15) + "px")
-      .style("top", (event.pageY - 28) + "px"))
-    .on("mouseout", () => tooltip.transition().duration(300).style("opacity", 0));
+      .style("left", `${event.pageX + 15}px`)
+      .style("top", `${event.pageY - 28}px`))
+    .on("mouseout", () => tooltip.style("visibility", "hidden"));
 
+  // Nodes
   const node = svg.append("g")
     .selectAll("g")
     .data(sankeyGraph.nodes)
@@ -140,17 +154,19 @@ export async function drawSankey() {
     .attr("text-anchor", "start");
 
   node.on("mouseover", (event, d) => {
-    let label = d.layer === 1
-      ? `<b>${d.name}</b><br>Total: ${d.value}`
-      : d.layer === 2
-        ? `<b>${d.name}</b><br>Domestic Cases: ${d.value}`
-        : `<b>${d.name}</b><br>Arrests: ${d.value}`;
-    tooltip.transition().duration(200).style("opacity", 0.9);
-    tooltip.html(label)
-      .style("left", (event.pageX + 15) + "px")
-      .style("top", (event.pageY - 28) + "px");
-  }).on("mousemove", event => tooltip
-    .style("left", (event.pageX + 15) + "px")
-    .style("top", (event.pageY - 28) + "px"))
-    .on("mouseout", () => tooltip.transition().duration(300).style("opacity", 0));
+    let label = `<strong>${d.name}</strong><br>`;
+    if (d.layer === 1) label += `Total Cases: ${d.value}`;
+    else if (d.layer === 2) label += `Domestic Classification: ${d.value}`;
+    else label += `Arrest Outcome: ${d.value}`;
+
+    tooltip
+      .style("visibility", "visible")
+      .html(label)
+      .style("left", `${event.pageX + 15}px`)
+      .style("top", `${event.pageY - 28}px`);
+  })
+    .on("mousemove", event => tooltip
+      .style("left", `${event.pageX + 15}px`)
+      .style("top", `${event.pageY - 28}px`))
+    .on("mouseout", () => tooltip.style("visibility", "hidden"));
 }

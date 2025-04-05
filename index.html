@@ -29,31 +29,32 @@
     </div>    
 
     <div id="monthly-facets-container">
+      <h2 class="faceted-title">Total Crime Trends Yearly</h2>
       <div id="monthly-facets"></div>
-    </div>    
+    </div>
     
     <!-- Inside the Overview Dashboard -->
-<div class="row-container">
-  <div class="chart-container" id="hourly-frequency-container">
-    <h2>Frequency of Crimes Throughout the Day</h2>
-    <div id="hourly-frequency"></div>
-  </div>
+    <div class="row-container">
+      <div class="chart-container" id="hourly-frequency-container">
+        <h2>Frequency of Crimes Throughout the Day</h2>
+        <div id="hourly-frequency"></div>
+      </div>
 
-  <div class="chart-container" id="crime-types-container">
-    <!-- 🔽 Filter dropdown and title -->
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h2 id="crime-types-title">Top 10 Crime Types</h2>
-      <div>
-        <label for="crime-type-select"><strong>Show:</strong></label>
-        <select id="crime-type-select">
-          <option value="10" selected>Top 10</option>
-          <option value="5">Top 5</option>
-        </select>
+      <div class="chart-container" id="crime-types-container">
+        <!-- 🔽 Filter dropdown and title -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 id="crime-types-title">Top 10 Crime Types</h2>
+          <div>
+            <label for="crime-type-select"><strong>Show:</strong></label>
+            <select id="crime-type-select">
+              <option value="10" selected>Top 10</option>
+              <option value="5">Top 5</option>
+            </select>
+          </div>
+        </div>
+        <div id="crime-types"></div>
       </div>
     </div>
-    <div id="crime-types"></div>
-  </div>
-</div>
 </div>
 
   <!-- Location Dashboard -->

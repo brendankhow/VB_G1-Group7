@@ -74,11 +74,12 @@ nav button.active {
 }
 
 /* 🔹 Left-align and full-width for crime trends chart only */
-#monthly-facets-container {
+.faceted-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 20px 0 10px 0;
   width: 100%;
-  padding-left: 40px;
-  margin-bottom: 40px;
-  box-sizing: border-box;
+  text-align: left;
 }
 
 #monthly-facets-container h2 {
@@ -135,10 +136,18 @@ svg {
 }
 
 select {
-  font-size: 14px;
-  padding: 5px 10px;
-  margin-left: 5px;
+  font-size: 18px;      /* larger text */
+  padding: 10px 16px;   /* bigger area */
+  margin: 10px;
+  border-radius: 6px;
 }
+
+#year-filter-container label {
+  font-size: 18px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
 
 .dashboard-title {
   font-size: 30px;
@@ -167,6 +176,7 @@ select {
   display: flex;
   flex-direction: column;
   align-items: center; /* Center contents horizontally */
+  padding: 0 40px;
   margin-bottom: 40px;
   box-sizing: border-box;
 }
@@ -180,12 +190,25 @@ select {
 }
 
 .faceted-title {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: bold;
   margin: 20px 0 10px 0;
-  width: 100%;              /* make it span full width */
-  text-align: left;         /* align text inside to the left */
-  padding-left: 80px;       /* match chart's left margin */
+  width: 100%;
+  text-align: left;
+  padding-left: 80px;  /* aligns with the chart’s left margin */
   box-sizing: border-box;
 }
 
+.tooltip {
+  position: absolute;
+  background: white;
+  padding: 12px 16px;         /* more padding */
+  border-radius: 6px;
+  border: 1px solid #999;
+  font-size: 20px;            /* bigger font */
+  pointer-events: none;
+  visibility: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* optional: subtle shadow */
+  max-width: 250px;           /* optional: prevent very wide boxes */
+  line-height: 1.5;
+}

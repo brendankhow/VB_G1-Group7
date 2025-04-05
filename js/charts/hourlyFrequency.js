@@ -28,25 +28,30 @@ export async function drawHourlyFrequency(data) {
     .nice()
     .range([height, 0]);
 
+  // X-axis with vertical tick labels
   g.append("g")
     .attr("transform", `translate(0,${height})`)
     .call(d3.axisBottom(x).ticks(24).tickFormat(d3.format("d")))
     .selectAll("text")
-    .attr("transform", "rotate(-45)")
-    .style("text-anchor", "end")
-    .style("font-size", "12px");
+    .attr("transform", null)
+    .attr("x", 0)
+    .attr("y", 10)
+    .style("text-anchor", "middle")
+    .style("font-size", "14px");
 
+  // Y-axis
   g.append("g")
     .call(d3.axisLeft(y).ticks(5))
     .selectAll("text")
-    .style("font-size", "12px");
+    .style("font-size", "14px");
 
+  // Line generator
   const line = d3.line()
     .x(d => x(d[0]))
     .y(d => y(d[1]))
     .curve(d3.curveMonotoneX);
 
-  // Append line with animation using stroke-dasharray
+  // Line path with draw animation
   const path = g.append("path")
     .datum(hourlyCounts)
     .attr("fill", "none")
@@ -64,6 +69,7 @@ export async function drawHourlyFrequency(data) {
     .ease(d3.easeCubic)
     .attr("stroke-dashoffset", 0);
 
+  // Tooltip setup
   const tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("position", "absolute")
@@ -71,9 +77,10 @@ export async function drawHourlyFrequency(data) {
     .style("padding", "6px")
     .style("border", "1px solid #999")
     .style("border-radius", "4px")
-    .style("font-size", "12px")
+    .style("font-size", "14px")
     .style("visibility", "hidden");
 
+  // Dots with tooltip and animation
   g.selectAll("circle")
     .data(hourlyCounts)
     .enter().append("circle")
@@ -105,14 +112,15 @@ export async function drawHourlyFrequency(data) {
     .duration(800)
     .attr("r", 4);
 
-  // Labels
+  // X-axis label (hour of day)
   g.append("text")
     .attr("x", width / 2)
     .attr("y", height + 60)
     .style("font-size", "14px")
     .attr("text-anchor", "middle")
-    .text("Hour of Day");
+    .text("Hour of Day (24 hours)");
 
+  // Y-axis label (crime count)
   g.append("text")
     .attr("transform", "rotate(-90)")
     .attr("x", -height / 2)

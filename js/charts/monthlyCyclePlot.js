@@ -62,7 +62,7 @@ export async function monthlyCyclePlot() {
     .style("padding", "6px")
     .style("border", "1px solid #999")
     .style("border-radius", "4px")
-    .style("font-size", "12px");
+    .style("font-size", "14px");
 
   const monthGroup = g.selectAll(".month-panel")
     .data(monthSeries)
