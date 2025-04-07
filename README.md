@@ -28,8 +28,8 @@ To run this dashboard locally:
 
 1. Open a terminal or command prompt
 
-2. Navigate to the project folder using:
-   cd VB_G1-Group7 - Dashboard 1
+2. Navigate to the project folder using the terminal command:
+   Example: cd C:\Users\wenjie.soh.2022\Desktop\VB_G1-Group7-main (1)\VB_G1-Group7-main
 
 3. Start the local server by running:
    python -m http.server 8000
