@@ -102,7 +102,9 @@ export function facetedMonthlyTrendChart(data) {
       .attr("transform", `translate(0, ${panelHeight - margin.bottom})`)
       .each(function() {
         d3.select(this)
-          .call(d3.axisBottom(x).tickValues(fixedYears))
+          .call(d3.axisBottom(x)
+          .tickValues([2015, 2017, 2019, 2021, 2023])
+          .tickFormat(d => d.toString()))
           .selectAll("text")
           .attr("transform", "rotate(-45)")
           .style("text-anchor", "end")

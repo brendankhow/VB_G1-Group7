@@ -14,12 +14,7 @@
 
 <body>
   <h1>Crime Data Dashboards</h1>
-  <nav>
-    <button class="tab-button active" onclick="showDashboard('overview')">📊 Overview</button>
-    <button class="tab-button" onclick="showDashboard('location')">📍 Location</button>
-    <button class="tab-button" onclick="showDashboard('domestic')">🔒 Domestic</button>
-  </nav>
-
+  
   <!-- Overview Dashboard -->  
   <div id="dashboard-overview" class="dashboard-container active">
     <h2 class="overview-dashboard-title">Crime Trends Over the Years</h2>
@@ -29,7 +24,7 @@
     </div>    
 
     <div id="monthly-facets-container">
-      <h2 class="faceted-title">Total Crime Trends Yearly</h2>
+      <h2 class="faceted-title">Total Yearly Crime Trends</h2>
       <div id="monthly-facets"></div>
     </div>
     
@@ -56,53 +51,6 @@
       </div>
     </div>
 </div>
-
-  <!-- Location Dashboard -->
-  <div id="dashboard-location" class="dashboard-container">
-    <h2 class="dashboard-title">District Trend in Chicago</h2>
-    <div class="row-container">
-      <div class="chart-container">
-        <h2>Crime Type by District</h2>
-        <div id="crime-type-by-district"></div>
-      </div>
-      <div class="chart-container">
-        <h2>Arrest Rate Per Primary Type</h2>
-        <div id="arrest-rate-pri-type-radial"></div>
-      </div>
-    </div>
-
-    <div class="row-container">
-      <div class="chart-container">
-        <h2>District Symbol Map (Domestic Cases Only)</h2>
-        <div id="domestic-symbol-map"></div>
-      </div>
-      <div class="chart-container">
-        <h2>Arrest Rate by District</h2>
-        <div id="arrest-rate"></div>
-      </div>
-    </div>
-    
-  </div>
-
-  <!-- Domestic Dashboard -->
-  <div id="dashboard-domestic" class="dashboard-container">
-    <div class="row-container">
-      <div class="chart-container">
-        <h2>Crime Flow by Type, Domestic, Arrest</h2>
-        <svg id="sankey-diagram" width="1100" height="700"></svg>
-      </div>
-    </div>
-    <div class="row-container">
-      <div class="chart-container">
-        <h2>Arrests VS Domestic Cases over Time</h2>
-        <div id="arrests-vs-domestic"></div>
-      </div>
-      <div class="chart-container">
-        <h2>Arrests VS Non-Domestic Cases over Time</h2>
-        <div id="arrests-vs-non-domestic"></div>
-      </div>
-    </div>
-  </div>
 
   <!-- Loading Spinner -->
   <div id="loading-spinner" style="

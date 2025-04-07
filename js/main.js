@@ -1,13 +1,6 @@
 import { facetedMonthlyTrendChart } from "./charts/facetedMonthlyTrendChart.js";
 import { drawHourlyFrequency } from "./charts/hourlyFrequency.js";
 import { crimeTypes } from "./charts/crimeTypes.js";
-import { crimeTypeByDistrict } from "./charts/crimeTypeByDistrict.js";
-import { radialBarChart } from "./charts/radialBarChart.js";
-import { districtSymbolMap } from "./charts/districtSymbolMap.js";
-import { arrestRateByDistrict } from "./charts/arrestRateByDistrict.js";
-import { drawSankey } from "./charts/drawSankey.js";
-import { arrestsVsDomesticCases } from "./charts/arrestsVsDomesticCases.js";
-import { arrestsVsNonDomesticCases } from "./charts/arrestsVsNonDomesticCases.js";
 import { loadData } from "./loadData.js";
 
 
@@ -68,8 +61,6 @@ export async function refreshCharts(selectedYear = "all") {
 
   const chartDivs = [
     "#monthly-facets", "#hourly-frequency", "#crime-types", 
-    "#crime-type-by-district", "#arrest-rate-pri-type-radial", "#arrest-rate",
-    "#sankey-diagram", "#arrests-vs-domestic", "#arrests-vs-non-domestic"
   ];
   chartDivs.forEach(id => d3.select(id).html(""));
 
@@ -81,17 +72,6 @@ export async function refreshCharts(selectedYear = "all") {
     crimeTypes(filteredData, limit),
     facetedMonthlyTrendChart(filteredData),
     drawHourlyFrequency(filteredData),
-  ]);
-
-  // Load the rest (not filtered by year)
-  await Promise.all([
-    crimeTypeByDistrict(),
-    radialBarChart(),
-    districtSymbolMap(),
-    arrestRateByDistrict(),
-    drawSankey(),
-    arrestsVsDomesticCases(),
-    arrestsVsNonDomesticCases(),
   ]);
 
   document.getElementById("loading-spinner").style.display = "none";

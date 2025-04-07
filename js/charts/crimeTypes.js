@@ -5,7 +5,7 @@ export async function crimeTypes(data, limit = 10) {
   const maxWidth = 600;
   const containerWidth = Math.min(container.clientWidth, maxWidth);
   const width = containerWidth - margin.left - margin.right;
-  const height = 400 - margin.top - margin.bottom;
+  const height = 265 - margin.top - margin.bottom;
 
   // Clear previous chart
   d3.select("#crime-types").html("");
@@ -44,7 +44,7 @@ export async function crimeTypes(data, limit = 10) {
   g.append("g")
     .call(d3.axisLeft(y))
     .selectAll("text")
-    .style("font-size", "14px");
+    .style("font-size", "12px");
 
   g.append("g")
     .attr("transform", `translate(0,${height})`)
@@ -55,7 +55,7 @@ export async function crimeTypes(data, limit = 10) {
     .attr("x", width / 2)
     .attr("y", height + 40)
     .attr("text-anchor", "middle")
-    .style("font-size", "14px")
+    .style("font-size", "12px")
     .text("Number of Crimes");
 
   g.append("text")
@@ -63,22 +63,48 @@ export async function crimeTypes(data, limit = 10) {
     .attr("x", -height / 2)
     .attr("y", -margin.left + 14)
     .attr("text-anchor", "middle")
-    .style("font-size", "14px")
+    .style("font-size", "12px")
     .text("Crime Type");
 
   // Bars
+  // Draw bars with animation
   const bars = g.selectAll("rect")
-    .data(sortedTypes)
-    .enter()
-    .append("rect")
-    .attr("x", 0)
-    .attr("y", d => y(d[0]))
-    .attr("height", y.bandwidth())
-    .attr("width", 0)
-    .attr("fill", "steelblue")
-    .transition()
-    .duration(800)
-    .attr("width", d => x(d[1]));
+  .data(sortedTypes)
+  .enter()
+  .append("rect")
+  .attr("x", 0)
+  .attr("y", d => y(d[0]))
+  .attr("height", y.bandwidth())
+  .attr("width", 0)
+  .attr("fill", "steelblue")
+  .transition()
+  .duration(800)
+  .attr("width", d => x(d[1]));
+
+  // Add text labels AFTER bar animation
+  g.selectAll(".label")
+  .data(sortedTypes)
+  .enter()
+  .append("text")
+  .attr("class", "label")
+  .attr("x", d => x(d[1]) + 5)
+  .attr("y", d => y(d[0]) + y.bandwidth() / 2)
+  .attr("dy", "0.35em")
+  .style("font-size", "12px")
+  .style("fill", "#333")
+  .style("opacity", 0) // start invisible
+  .text("0")
+  .transition()
+  .delay(800) // wait for bar to finish
+  .duration(800)
+  .style("opacity", 1)
+  .tween("text", function(d) {
+    const i = d3.interpolate(0, d[1]);
+    return function(t) {
+      this.textContent = d3.format(",")(Math.round(i(t)));
+    };
+  });
+
 
   // Tooltip
   const tooltip = d3.select("body").append("div")

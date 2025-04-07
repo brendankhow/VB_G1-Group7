@@ -136,8 +136,8 @@ svg {
 }
 
 select {
-  font-size: 18px;      /* larger text */
-  padding: 10px 16px;   /* bigger area */
+  font-size: 18px;   
+  padding: 10px 16px; 
   margin: 10px;
   border-radius: 6px;
 }
@@ -148,6 +148,11 @@ select {
   margin-right: 10px;
 }
 
+.overview-dashboard-title {
+  text-align: center;
+  margin: 20px auto;
+  font-size: 30px;
+}
 
 .dashboard-title {
   font-size: 30px;
